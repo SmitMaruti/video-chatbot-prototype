@@ -1,0 +1,18 @@
+html, body {
+    margin: 0;
+}
+
+#root {
+    position: relative;
+}
+
+#video-player{
+    height: calc(100vh - 4px);
+    width: 100%;
+}
+
+#btn-group {
+    position: absolute;
+    bottom: 100px;
+    left: 10px;
+}
