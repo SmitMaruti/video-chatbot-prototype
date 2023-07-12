@@ -1,30 +1,14 @@
-let video = "";
-let buttonsPayload = [];
-function setupCode() {
-    if (window.location.search) {
-        const params = new URLSearchParams(window.location.search);
-        video = decodeURI(params.get("video"));
-        try {
-            buttonsPayload = JSON.parse(decodeURI(params.get("buttons"))) || [];
-            console.log("buttonsPayload", buttonsPayload);
-        } catch (err) {
-            console.error(err);
-        }
-    }
-}
-setupCode();
 const root = document.getElementById("root");
+
 const videoTag = document.createElement("video");
 videoTag.controls = true;
-videoTag.autoplay = true;
 videoTag.setAttribute("id", "video-player");
 const sourceTag = document.createElement("source");
-sourceTag.setAttribute("src", video);
+sourceTag.src = "";
 videoTag.appendChild(sourceTag);
 
 const buttonGroup = document.createElement("div");
 buttonGroup.setAttribute("id", "btn-group");
-const buttons = [];
 
 function handleButtonClick(event) {
     const value = event.target.id;
@@ -33,13 +17,45 @@ function handleButtonClick(event) {
         "*"
     );
 }
-for (let btnPayload of buttonsPayload) {
-    const button = document.createElement("button");
-    button.textContent = btnPayload.label;
-    button.setAttribute("id", btnPayload.value);
-    button.addEventListener("click", handleButtonClick);
-    buttonGroup.appendChild(button);
-}
 
 root.appendChild(videoTag);
 root.appendChild(buttonGroup);
+const loader = document.getElementById("loader");
+function playVideo() {
+    loader.style.display = "none";
+    videoTag.play();
+}
+function pauseVideo() {
+    loader.style.display = "block";
+    videoTag.pause();
+}
+function generateButtonGroup(buttonsPayload = []) {
+    buttonGroup.textContent = "";
+    for (let btnPayload of buttonsPayload) {
+        const button = document.createElement("button");
+        button.textContent = btnPayload.label;
+        button.setAttribute("id", btnPayload.value);
+        button.addEventListener("click", handleButtonClick);
+        buttonGroup.appendChild(button);
+    }
+}
+function updateVideo(video, buttonPayload) {
+    sourceTag.src = video;
+    videoTag.load();
+    generateButtonGroup(buttonPayload);
+}
+window.addEventListener("message", (event) => {
+    console.log("iframe message", event);
+    if (event.data && event.data.type === "video-chatbot-event") {
+        if (event.data.action === "play") {
+            playVideo();
+        } else if (event.data.action === "update") {
+            updateVideo(
+                event.data.payload.video,
+                event.data.payload.buttonsPayload
+            );
+        } else if (event.data.action === "pause") {
+            pauseVideo();
+        }
+    }
+});
